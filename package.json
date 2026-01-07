@@ -1,0 +1,22 @@
+{
+  "name": "majorworld-hybrid-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:admin": "pnpm --filter admin dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "build:backend": "pnpm --filter backend build",
+    "build:admin": "pnpm --filter admin build",
+    "build:mobile": "pnpm --filter mobile android && pnpm --filter mobile ios",
+    "db:migrate": "pnpm --filter backend migration:run",
+    "db:seed": "pnpm --filter backend seed:run",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
+
