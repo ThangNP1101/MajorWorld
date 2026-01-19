@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFile,
+  HttpStatus,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import {
@@ -17,6 +18,7 @@ import {
   ApiResponse,
   ApiConsumes,
   ApiBody,
+  ApiBearerAuth,
 } from "@nestjs/swagger";
 import { BottomMenuService } from "./bottom-menu.service";
 import { BottomMenu } from "./entities/bottom-menu.entity";
@@ -25,6 +27,7 @@ import { UpdateBottomMenuDto } from "./dto/update-bottom-menu.dto";
 import { BulkUpdateBottomMenuDto } from "./dto/bulk-update-bottom-menu.dto";
 
 @ApiTags("Admin - Bottom Menu")
+@ApiBearerAuth()
 @Controller("admin/bottom-menu")
 export class BottomMenuController {
   constructor(private readonly bottomMenuService: BottomMenuService) {}
@@ -32,7 +35,7 @@ export class BottomMenuController {
   @Get()
   @ApiOperation({ summary: "Get all bottom menus" })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: "List of all menus",
     type: [BottomMenu],
   })
@@ -43,7 +46,7 @@ export class BottomMenuController {
   @Get("active")
   @ApiOperation({ summary: "Get active bottom menus only" })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: "List of active menus",
     type: [BottomMenu],
   })
@@ -54,11 +57,11 @@ export class BottomMenuController {
   @Get(":id")
   @ApiOperation({ summary: "Get a menu by ID" })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: "Menu found",
     type: BottomMenu,
   })
-  @ApiResponse({ status: 404, description: "Menu not found" })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Menu not found" })
   async findOne(@Param("id", ParseIntPipe) id: number): Promise<BottomMenu> {
     return this.bottomMenuService.findOne(id);
   }
@@ -66,7 +69,7 @@ export class BottomMenuController {
   @Post()
   @ApiOperation({ summary: "Create a new menu" })
   @ApiResponse({
-    status: 201,
+    status: HttpStatus.CREATED,
     description: "Menu created successfully",
     type: BottomMenu,
   })
@@ -77,7 +80,7 @@ export class BottomMenuController {
   @Put("bulk")
   @ApiOperation({ summary: "Bulk update all menus (replace all)" })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: "Menus updated successfully",
     type: [BottomMenu],
   })
@@ -95,11 +98,11 @@ export class BottomMenuController {
   @Put(":id")
   @ApiOperation({ summary: "Update a menu" })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: "Menu updated successfully",
     type: BottomMenu,
   })
-  @ApiResponse({ status: 404, description: "Menu not found" })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Menu not found" })
   async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateDto: UpdateBottomMenuDto
@@ -109,8 +112,8 @@ export class BottomMenuController {
 
   @Delete(":id")
   @ApiOperation({ summary: "Delete a menu" })
-  @ApiResponse({ status: 200, description: "Menu deleted successfully" })
-  @ApiResponse({ status: 404, description: "Menu not found" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Menu deleted successfully" })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Menu not found" })
   async remove(@Param("id", ParseIntPipe) id: number): Promise<void> {
     return this.bottomMenuService.remove(id);
   }
@@ -131,7 +134,7 @@ export class BottomMenuController {
     },
   })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: "Active icon uploaded successfully",
     type: BottomMenu,
   })
@@ -158,7 +161,7 @@ export class BottomMenuController {
     },
   })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: "Inactive icon uploaded successfully",
     type: BottomMenu,
   })

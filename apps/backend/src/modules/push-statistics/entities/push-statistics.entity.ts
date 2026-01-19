@@ -28,8 +28,8 @@ export class PushStatistics {
   pushMessageId: number;
 
   @ApiProperty()
-  @Column({ name: 'device_token_id' })
-  deviceTokenId: number;
+  @Column({ name: 'device_token_id', type: 'uuid' })
+  deviceTokenId: string;
 
   @ApiProperty({ enum: EventType })
   @Column({

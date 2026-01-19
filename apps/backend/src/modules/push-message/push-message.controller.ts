@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -38,7 +39,7 @@ export class PushMessageController {
   @Get()
   @ApiOperation({ summary: 'Get all push messages' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'List of all push messages',
     type: [PushMessage],
   })
@@ -49,7 +50,7 @@ export class PushMessageController {
   @Get('scheduled')
   @ApiOperation({ summary: 'Get scheduled push messages' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'List of scheduled push messages',
     type: [PushMessage],
   })
@@ -60,7 +61,7 @@ export class PushMessageController {
   @Get('stats')
   @ApiOperation({ summary: 'Get device statistics by platform' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Device statistics',
     type: DeviceStatsDto,
   })
@@ -71,11 +72,11 @@ export class PushMessageController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a push message by ID' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Push message found',
     type: PushMessage,
   })
-  @ApiResponse({ status: 404, description: 'Push message not found' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Push message not found' })
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<PushMessage> {
     return this.pushMessageService.findOne(id);
   }
@@ -83,7 +84,7 @@ export class PushMessageController {
   @Post()
   @ApiOperation({ summary: 'Create a new push message' })
   @ApiResponse({
-    status: 201,
+    status: HttpStatus.CREATED,
     description: 'Push message created successfully',
     type: PushMessage,
   })
@@ -94,11 +95,11 @@ export class PushMessageController {
   @Put(':id')
   @ApiOperation({ summary: 'Update a push message' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Push message updated successfully',
     type: PushMessage,
   })
-  @ApiResponse({ status: 404, description: 'Push message not found' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Push message not found' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdatePushMessageDto,
@@ -108,8 +109,8 @@ export class PushMessageController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a push message' })
-  @ApiResponse({ status: 200, description: 'Push message deleted successfully' })
-  @ApiResponse({ status: 404, description: 'Push message not found' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Push message deleted successfully' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Push message not found' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.pushMessageService.remove(id);
   }
@@ -117,11 +118,11 @@ export class PushMessageController {
   @Post(':id/send')
   @ApiOperation({ summary: 'Send a push message immediately' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Push message sent successfully',
     type: PushMessage,
   })
-  @ApiResponse({ status: 404, description: 'Push message not found' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Push message not found' })
   async send(@Param('id', ParseIntPipe) id: number): Promise<PushMessage> {
     return this.pushMessageService.send(id);
   }
@@ -129,10 +130,10 @@ export class PushMessageController {
   @Post(':id/test')
   @ApiOperation({ summary: 'Send a test push to selected devices' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Test push sent successfully',
   })
-  @ApiResponse({ status: 404, description: 'Push message not found' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Push message not found' })
   async sendTest(
     @Param('id', ParseIntPipe) id: number,
     @Body() sendTestDto: SendTestPushDto,
@@ -156,7 +157,7 @@ export class PushMessageController {
     },
   })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Image uploaded successfully',
     type: PushMessage,
   })

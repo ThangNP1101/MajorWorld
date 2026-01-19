@@ -1,4 +1,5 @@
 import { AppDataSource } from "../data-source";
+import * as bcrypt from "bcrypt";
 
 async function seed() {
   try {
@@ -82,6 +83,29 @@ async function seed() {
       console.log("✅ App features seeded");
     } else {
       console.log("⏭️  App features already exist, skipping");
+    }
+
+    // Seed default admin user
+    const existingUsers = await queryRunner.query(`
+      SELECT COUNT(*) as count FROM users
+    `);
+    if (parseInt(existingUsers[0].count) === 0) {
+      const hashedPassword = await bcrypt.hash("admin123", 10);
+      await queryRunner.query(`
+        INSERT INTO users (email, password, name, role, is_active)
+        VALUES ($1, $2, $3, $4, $5)
+      `, [
+        'admin@majorworld.com',
+        hashedPassword,
+        'Admin User',
+        'super_admin',
+        true
+      ]);
+      console.log("✅ Default admin user seeded");
+      console.log("   📧 Email: admin@majorworld.com");
+      console.log("   🔑 Password: admin123");
+    } else {
+      console.log("⏭️  Users already exist, skipping");
     }
 
     await queryRunner.release();

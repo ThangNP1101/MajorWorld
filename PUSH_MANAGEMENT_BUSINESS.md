@@ -11,16 +11,19 @@ The Push Message Management system enables administrators to create, schedule, a
 ### 1. Message Composition
 
 #### Target Audience Selection
+
 - **All Users**: Send to all active device tokens regardless of platform
 - **Android Only**: Send exclusively to Android devices
 - **iOS Only**: Send exclusively to iOS devices
 
 The system displays real-time device counts for each target option:
+
 - Total active devices
 - Android device count
 - iOS device count
 
 #### Message Content
+
 - **Title** (Required, max 100 characters): The notification title displayed to users
 - **Android Message**: Primary message content for Android notifications
 - **Android BigText** (Optional): Expanded content shown when Android users expand the notification
@@ -31,6 +34,7 @@ The system displays real-time device counts for each target option:
   - Supports web URLs: `https://example.com/product/123`
 
 #### Business Rules
+
 - At least one message (Android or iOS) must be provided
 - Title is mandatory for all notifications
 - Image dimensions are recommended but not enforced (800x464 for optimal display)
@@ -41,17 +45,20 @@ The system displays real-time device counts for each target option:
 ### 2. Delivery Options
 
 #### Immediate Dispatch
+
 - Message is sent immediately upon creation
 - Status transitions: `DRAFT` → `SENDING` → `SENT`
 - Real-time delivery to target devices
 
 #### Scheduled Dispatch
+
 - Message is created with a future date/time
 - Status is set to `SCHEDULED` until the scheduled time arrives
 - System processes scheduled messages automatically
 - Status transitions: `DRAFT` → `SCHEDULED` → `SENDING` → `SENT`
 
 #### Nightly Notification Restrictions
+
 - **Warning Period**: 9:00 PM - 8:00 AM
 - System displays a warning when attempting immediate dispatch during this period
 - Notifications may be limited based on user's device notification settings
@@ -62,17 +69,20 @@ The system displays real-time device counts for each target option:
 ### 3. Test Dispatch
 
 #### Purpose
+
 - Allows administrators to test notifications before sending to all users
 - Validates message content, formatting, and deep link functionality
 - Tests on registered test devices
 
 #### Test Device Management
+
 - Test devices are registered separately from production devices
 - Administrators can select multiple test devices for testing
 - Test dispatch sends notifications only to selected test devices
 - Test dispatches do not affect production statistics
 
 #### Business Rules
+
 - At least one test device must be selected
 - Test devices must be active (isActive = true)
 - Test dispatch uses the same message content as production
@@ -82,6 +92,7 @@ The system displays real-time device counts for each target option:
 ### 4. Scheduled Messages Management
 
 #### View Scheduled Messages
+
 - Lists all messages with `SCHEDULED` status
 - Displays:
   - Message title
@@ -90,6 +101,7 @@ The system displays real-time device counts for each target option:
   - Current status (Booked)
 
 #### Delete Scheduled Messages
+
 - Administrators can delete scheduled messages before they are sent
 - Only messages with `SCHEDULED` or `DRAFT` status can be deleted
 - Sent messages cannot be deleted (for audit purposes)
@@ -108,6 +120,7 @@ Admin Panel → Create Push Message API → Validation → Database (push_messag
 ```
 
 **Steps:**
+
 1. Administrator fills out the compose form
 2. Form validation ensures required fields are present
 3. If image is uploaded, it's stored in S3 and URL is saved
@@ -137,6 +150,7 @@ Push Message (DRAFT/SCHEDULED) → Send API → Status: SENDING
 ```
 
 **Steps:**
+
 1. Administrator triggers send (or scheduled job triggers)
 2. System queries `device_tokens` table for active tokens matching target
 3. Tokens are filtered by platform if target is Android/iOS only
@@ -166,6 +180,7 @@ Scheduled Job (Cron/Queue) → Query Scheduled Messages
 ```
 
 **Steps:**
+
 1. Background job runs periodically (e.g., every minute)
 2. Queries messages where:
    - `status` = `SCHEDULED`
@@ -189,6 +204,7 @@ Test Dispatch Request → Validate Test Devices
 ```
 
 **Steps:**
+
 1. Administrator selects test devices
 2. System validates devices are active
 3. Sends notifications using same FCM flow
@@ -208,6 +224,7 @@ Statistics Request → Query device_tokens table
 ```
 
 **Steps:**
+
 1. Query counts active device tokens (`isActive = true`)
 2. Total: All active tokens
 3. Android: Active tokens with `platform = 'android'`
@@ -234,21 +251,25 @@ DRAFT → SCHEDULED → SENDING → SENT
 ### Validation Rules
 
 1. **Title**
+
    - Required
    - Maximum 100 characters
    - Cannot be empty or whitespace only
 
 2. **Messages**
+
    - At least one message (Android or iOS) must be provided
    - Messages can be empty strings if not targeting that platform
    - BigText is optional (Android only)
 
 3. **Scheduled Time**
+
    - Required when `sendType = 'scheduled'`
    - Must be in the future
    - Stored as ISO 8601 timestamp
 
 4. **Image**
+
    - Optional
    - Recommended dimensions: 800x464
    - Stored in S3, URL saved in database
@@ -277,12 +298,14 @@ DRAFT → SCHEDULED → SENDING → SENT
 ### Platform-Specific Behavior
 
 #### Android
+
 - Supports BigText (expanded content)
 - Supports image attachments
 - Uses FCM Android notification format
 - Priority: High
 
 #### iOS
+
 - Supports rich media (images)
 - Uses APNs format via FCM
 - Sound: Default
@@ -336,6 +359,7 @@ DRAFT → SCHEDULED → SENDING → SENT
 ## API Endpoints
 
 ### Message Management
+
 - `GET /admin/push-messages` - List all messages
 - `GET /admin/push-messages/scheduled` - List scheduled messages
 - `GET /admin/push-messages/stats` - Get device statistics
@@ -345,6 +369,7 @@ DRAFT → SCHEDULED → SENDING → SENT
 - `DELETE /admin/push-messages/:id` - Delete message
 
 ### Message Actions
+
 - `POST /admin/push-messages/:id/send` - Send message immediately
 - `POST /admin/push-messages/:id/test` - Send test push
 - `POST /admin/push-messages/:id/upload/image` - Upload image
@@ -356,18 +381,21 @@ DRAFT → SCHEDULED → SENDING → SENT
 ### Common Errors
 
 1. **Validation Errors**
+
    - Missing required fields
    - Invalid date/time format
    - Scheduled time in the past
    - Returns 400 Bad Request with error message
 
 2. **Business Logic Errors**
+
    - Cannot update sent message
    - Cannot delete sending message
    - No active devices for target
    - Returns 400 Bad Request with descriptive message
 
 3. **Firebase Errors**
+
    - Firebase not initialized
    - Invalid FCM tokens
    - Network errors
@@ -414,6 +442,7 @@ DRAFT → SCHEDULED → SENDING → SENT
 ## Monitoring & Alerts
 
 ### Key Metrics to Monitor
+
 - Message send success rate
 - Average delivery time
 - Failed delivery count
@@ -421,6 +450,7 @@ DRAFT → SCHEDULED → SENDING → SENT
 - Firebase API quota usage
 
 ### Alerts
+
 - High failure rate (>5%)
 - Scheduled message processing errors
 - Firebase quota approaching limit
@@ -433,12 +463,14 @@ DRAFT → SCHEDULED → SENDING → SENT
 ### Common Issues
 
 1. **Messages not sending**
+
    - Check Firebase configuration
    - Verify device tokens are active
    - Check Firebase quota/limits
    - Review error logs
 
 2. **Scheduled messages not processing**
+
    - Verify background job is running
    - Check scheduled time is correct
    - Review job logs
@@ -455,6 +487,7 @@ DRAFT → SCHEDULED → SENDING → SENT
 ### FCM Message Format Examples
 
 #### Android
+
 ```json
 {
   "notification": {
@@ -476,6 +509,7 @@ DRAFT → SCHEDULED → SENDING → SENT
 ```
 
 #### iOS
+
 ```json
 {
   "notification": {
@@ -506,5 +540,4 @@ DRAFT → SCHEDULED → SENDING → SENT
 
 ---
 
-*Last Updated: 2025-01-15*
-
+_Last Updated: 2025-01-15_

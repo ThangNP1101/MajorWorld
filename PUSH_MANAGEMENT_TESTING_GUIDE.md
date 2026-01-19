@@ -19,24 +19,28 @@
 ### Testing Strategy
 
 1. **Unit Testing** (Backend Service Logic)
+
    - Test CRUD operations
    - Test validation logic
    - Test business rules
    - Mock Firebase Admin SDK
 
 2. **Integration Testing** (API Endpoints)
+
    - Test all REST endpoints
    - Test request/response formats
    - Test error handling
    - Test authentication (if applicable)
 
 3. **Frontend Testing** (UI Components)
+
    - Test form validation
    - Test user interactions
    - Test data fetching
    - Test error states
 
 4. **End-to-End Testing** (Full Flow)
+
    - Create message → Send → Verify delivery
    - Schedule message → Process → Verify
    - Test with real/mock device tokens
@@ -51,6 +55,7 @@
 ## ✅ Testing Todos
 
 ### Phase 1: Environment Setup
+
 - [ ] Setup Firebase project
 - [ ] Configure Firebase Admin SDK credentials
 - [ ] Setup test database
@@ -58,6 +63,7 @@
 - [ ] Verify backend can connect to Firebase
 
 ### Phase 2: Backend API Testing
+
 - [ ] Test GET `/admin/push-messages` (list all)
 - [ ] Test GET `/admin/push-messages/scheduled` (scheduled only)
 - [ ] Test GET `/admin/push-messages/stats` (device counts)
@@ -70,6 +76,7 @@
 - [ ] Test POST `/admin/push-messages/:id/upload/image` (image upload)
 
 ### Phase 3: Validation Testing
+
 - [ ] Test title validation (required, max 100 chars)
 - [ ] Test message validation (at least one required)
 - [ ] Test scheduled time validation (must be future)
@@ -79,6 +86,7 @@
 - [ ] Test delete restrictions (can't delete sent messages)
 
 ### Phase 4: Frontend Testing
+
 - [ ] Test compose form (all fields)
 - [ ] Test target selection with device counts
 - [ ] Test preview sidebar (Android & iOS)
@@ -91,6 +99,7 @@
 - [ ] Test error handling
 
 ### Phase 5: Firebase Integration Testing
+
 - [ ] Test FCM message format (Android)
 - [ ] Test FCM message format (iOS)
 - [ ] Test BigText for Android
@@ -100,6 +109,7 @@
 - [ ] Test error handling (invalid tokens)
 
 ### Phase 6: End-to-End Testing
+
 - [ ] Create and send immediate message
 - [ ] Create and schedule message
 - [ ] Verify scheduled message appears in list
@@ -143,6 +153,7 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----E
 ```
 
 **Important Notes:**
+
 - `FIREBASE_PRIVATE_KEY` must include the full key with `\n` characters
 - Wrap the entire key in double quotes
 - The key should be on a single line with `\n` for newlines
@@ -176,7 +187,7 @@ You can test Firebase connection by checking if the service initializes:
 Create a seed script or use SQL to insert test data:
 
 #### Mock Device Tokens
-
+ 
 ```sql
 -- Insert test Android device tokens
 INSERT INTO device_tokens (fcm_token, platform, is_active, created_at, updated_at)
@@ -288,6 +299,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Goal:** Verify device counts are returned correctly
 
 **Steps:**
+
 1. Ensure backend is running: `pnpm dev:backend`
 2. Open browser or use curl:
    ```bash
@@ -310,6 +322,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Goal:** Create a push message without sending it
 
 **Steps:**
+
 1. Open Swagger UI: http://localhost:3001/api
 2. Navigate to **POST /admin/push-messages**
 3. Use this request body:
@@ -336,6 +349,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Goal:** Create a message scheduled for future delivery
 
 **Steps:**
+
 1. In Swagger UI, use **POST /admin/push-messages**
 2. Use this request body:
    ```json
@@ -361,6 +375,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Goal:** Retrieve list of scheduled messages
 
 **Steps:**
+
 1. Use **GET /admin/push-messages/scheduled**
 2. **Expected Response:** Array of scheduled messages
 3. **Verify:**
@@ -374,6 +389,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Goal:** Modify an existing draft/scheduled message
 
 **Steps:**
+
 1. Create a message first (Test 2)
 2. Note the `id` from response
 3. Use **PUT /admin/push-messages/:id**
@@ -394,6 +410,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Goal:** Remove a scheduled message
 
 **Steps:**
+
 1. Create a scheduled message (Test 3)
 2. Note the `id`
 3. Use **DELETE /admin/push-messages/:id**
@@ -407,11 +424,13 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Goal:** Send a push message immediately
 
 **Prerequisites:**
+
 - Firebase is configured
 - At least one active device token exists
 - Message is in `draft` status
 
 **Steps:**
+
 1. Create a draft message (Test 2)
 2. Note the `id`
 3. Use **POST /admin/push-messages/:id/send**
@@ -431,6 +450,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Goal:** Attach an image to a push message
 
 **Steps:**
+
 1. Create a message first (Test 2)
 2. Note the `id`
 3. Use **POST /admin/push-messages/:id/upload/image**
@@ -447,10 +467,12 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Goal:** Send test push to specific devices
 
 **Prerequisites:**
+
 - Message exists
 - Test device tokens are registered
 
 **Steps:**
+
 1. Get device token IDs from database:
    ```sql
    SELECT id, fcm_token, platform FROM device_tokens WHERE is_active = true;
@@ -475,6 +497,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 **Test Cases:**
 
 1. **Missing Title:**
+
    ```json
    {
      "androidMessage": "Test",
@@ -482,9 +505,11 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
      "sendType": "immediate"
    }
    ```
+
    **Expected:** 400 Bad Request
 
 2. **No Messages:**
+
    ```json
    {
      "title": "Test",
@@ -492,9 +517,11 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
      "sendType": "immediate"
    }
    ```
+
    **Expected:** 400 Bad Request - "At least one message is required"
 
 3. **Scheduled Without Time:**
+
    ```json
    {
      "title": "Test",
@@ -502,9 +529,11 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
      "sendType": "scheduled"
    }
    ```
+
    **Expected:** 400 Bad Request
 
 4. **Past Scheduled Time:**
+
    ```json
    {
      "title": "Test",
@@ -513,12 +542,13 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
      "scheduledAt": "2020-01-01T10:00:00Z"
    }
    ```
+
    **Expected:** 400 Bad Request - "Scheduled time must be in the future"
 
 5. **Update Sent Message:**
    - Create and send a message
    - Try to update it
-   **Expected:** 400 Bad Request - "Cannot update a message that has already been sent"
+     **Expected:** 400 Bad Request - "Cannot update a message that has already been sent"
 
 ---
 
@@ -527,6 +557,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Using Swagger UI
 
 1. **Access Swagger:**
+
    - URL: http://localhost:3001/api
    - All endpoints are documented with examples
 
@@ -540,11 +571,13 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Using Postman
 
 1. **Import Collection:**
+
    - Create a new collection: "Push Management"
    - Add requests for each endpoint
    - Set base URL: `http://localhost:3001/api`
 
 2. **Environment Variables:**
+
    ```
    base_url: http://localhost:3001/api
    message_id: (set after creating a message)
@@ -561,6 +594,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Test 1: Load Push Management Page
 
 **Steps:**
+
 1. Start admin panel: `pnpm dev:admin`
 2. Navigate to: http://localhost:3000/push-management
 3. **Verify:**
@@ -571,6 +605,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Test 2: Compose Form
 
 **Steps:**
+
 1. Fill in the compose form:
    - Title: "Test Notification"
    - Android Message: "Test Android"
@@ -585,6 +620,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Test 3: Image Upload
 
 **Steps:**
+
 1. Click "Upload an image"
 2. Select an image file
 3. **Verify:**
@@ -595,6 +631,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Test 4: Scheduled Message
 
 **Steps:**
+
 1. Select "Send a reservation"
 2. Choose a future date/time
 3. Fill in message details
@@ -607,6 +644,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Test 5: Scheduled Messages List
 
 **Steps:**
+
 1. Click "Scheduled to be shipped" tab
 2. **Verify:**
    - Scheduled messages are listed
@@ -617,6 +655,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Test 6: Form Validation
 
 **Test Cases:**
+
 1. Submit without title → Error message
 2. Submit without any message → Error message
 3. Schedule without date → Error message
@@ -629,6 +668,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### E2E Test 1: Create and Send Immediate Message
 
 **Flow:**
+
 1. Open admin panel
 2. Navigate to Push Management
 3. Fill compose form
@@ -643,6 +683,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### E2E Test 2: Create and Schedule Message
 
 **Flow:**
+
 1. Fill compose form
 2. Select "Send a reservation"
 3. Set future date/time
@@ -656,6 +697,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### E2E Test 3: Update Scheduled Message
 
 **Flow:**
+
 1. Create scheduled message
 2. Note the ID
 3. Use API to update it
@@ -670,10 +712,12 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Issue: Firebase Admin Not Initialized
 
 **Symptoms:**
+
 - Error: "Firebase Admin is not initialized"
 - Warning in console logs
 
 **Solutions:**
+
 1. Check `.env` file exists and has correct values
 2. Verify `FIREBASE_PRIVATE_KEY` includes `\n` characters
 3. Ensure private key is wrapped in quotes
@@ -682,10 +726,12 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Issue: No Device Tokens Found
 
 **Symptoms:**
+
 - Error: "No active device tokens found"
 - Device stats show 0
 
 **Solutions:**
+
 1. Insert mock device tokens (see Mock Data Setup)
 2. Verify tokens have `is_active = true`
 3. Check database connection
@@ -693,10 +739,12 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Issue: Image Upload Fails
 
 **Symptoms:**
+
 - Error uploading image
 - Image URL not saved
 
 **Solutions:**
+
 1. Check AWS S3 configuration
 2. Verify `UploadModule` is imported
 3. Check file size limits
@@ -705,9 +753,11 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Issue: Scheduled Messages Not Processing
 
 **Symptoms:**
+
 - Scheduled messages not sending at scheduled time
 
 **Solutions:**
+
 1. Implement cron job or queue processor
 2. Call `processScheduledMessages()` periodically
 3. Check scheduled time is in the future
@@ -716,11 +766,13 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Issue: Frontend Not Loading Data
 
 **Symptoms:**
+
 - Empty lists
 - Loading forever
 - Network errors
 
 **Solutions:**
+
 1. Check backend is running
 2. Verify API base URL in `.env`
 3. Check CORS settings
@@ -730,10 +782,12 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ### Issue: Validation Errors Not Showing
 
 **Symptoms:**
+
 - Form submits but fails silently
 - No error messages
 
 **Solutions:**
+
 1. Check browser console
 2. Verify error handling in mutations
 3. Check API response format
@@ -744,6 +798,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 ## 📊 Testing Checklist Summary
 
 ### Backend API
+
 - [ ] All CRUD endpoints work
 - [ ] Validation works correctly
 - [ ] Error handling is proper
@@ -751,6 +806,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 - [ ] Firebase integration works (if configured)
 
 ### Frontend UI
+
 - [ ] Page loads correctly
 - [ ] Forms work and validate
 - [ ] Preview updates in real-time
@@ -760,6 +816,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 - [ ] Error messages display
 
 ### Integration
+
 - [ ] Create → Send flow works
 - [ ] Create → Schedule flow works
 - [ ] Update → Save works
@@ -767,6 +824,7 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 - [ ] Image upload → Save works
 
 ### Firebase (if configured)
+
 - [ ] Messages are sent to FCM
 - [ ] Android format is correct
 - [ ] iOS format is correct
@@ -788,5 +846,4 @@ curl -X POST http://localhost:3001/api/admin/push-messages \
 
 ---
 
-*Last Updated: 2025-01-15*
-
+_Last Updated: 2025-01-15_

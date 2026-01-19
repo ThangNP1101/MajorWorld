@@ -6,13 +6,16 @@ import { CreateBottomMenuDto } from "./dto/create-bottom-menu.dto";
 import { UpdateBottomMenuDto } from "./dto/update-bottom-menu.dto";
 import { BulkUpdateBottomMenuDto } from "./dto/bulk-update-bottom-menu.dto";
 import { UploadService } from "../upload/upload.service";
+import { ConfigVersionService } from "../config-version/config-version.service";
+import { ModuleName } from "../config-version/entities/config-version.entity";
 
 @Injectable()
 export class BottomMenuService {
   constructor(
     @InjectRepository(BottomMenu)
     private bottomMenuRepository: Repository<BottomMenu>,
-    private uploadService: UploadService
+    private uploadService: UploadService,
+    private readonly configVersionService: ConfigVersionService
   ) {}
 
   async findAll(): Promise<BottomMenu[]> {
@@ -41,7 +44,9 @@ export class BottomMenuService {
       ...createDto,
       isActive: createDto.isActive ?? true,
     });
-    return this.bottomMenuRepository.save(menu);
+    const saved = await this.bottomMenuRepository.save(menu);
+    await this.configVersionService.incrementVersion(ModuleName.BOTTOM_MENU);
+    return saved;
   }
 
   async update(
@@ -50,7 +55,9 @@ export class BottomMenuService {
   ): Promise<BottomMenu> {
     const menu = await this.findOne(id);
     Object.assign(menu, updateDto);
-    return this.bottomMenuRepository.save(menu);
+    const saved = await this.bottomMenuRepository.save(menu);
+    await this.configVersionService.incrementVersion(ModuleName.BOTTOM_MENU);
+    return saved;
   }
 
   async remove(id: number): Promise<void> {
@@ -65,6 +72,7 @@ export class BottomMenuService {
     }
 
     await this.bottomMenuRepository.remove(menu);
+    await this.configVersionService.incrementVersion(ModuleName.BOTTOM_MENU);
   }
 
   async bulkUpdate(
@@ -169,7 +177,9 @@ export class BottomMenuService {
       }
     }
 
-    return savedMenus.sort((a, b) => a.sortOrder - b.sortOrder);
+    const result = savedMenus.sort((a, b) => a.sortOrder - b.sortOrder);
+    await this.configVersionService.incrementVersion(ModuleName.BOTTOM_MENU);
+    return result;
   }
 
   async uploadActiveIcon(
@@ -194,7 +204,9 @@ export class BottomMenuService {
     );
     menu.iconActive = iconUrl;
 
-    return this.bottomMenuRepository.save(menu);
+    const saved = await this.bottomMenuRepository.save(menu);
+    await this.configVersionService.incrementVersion(ModuleName.BOTTOM_MENU);
+    return saved;
   }
 
   async uploadInactiveIcon(
@@ -219,6 +231,8 @@ export class BottomMenuService {
     );
     menu.iconInactive = iconUrl;
 
-    return this.bottomMenuRepository.save(menu);
+    const saved = await this.bottomMenuRepository.save(menu);
+    await this.configVersionService.incrementVersion(ModuleName.BOTTOM_MENU);
+    return saved;
   }
 }

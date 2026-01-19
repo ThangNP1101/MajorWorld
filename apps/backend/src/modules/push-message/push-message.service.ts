@@ -188,7 +188,7 @@ export class PushMessageService {
     }
   }
 
-  async sendTest(id: number, deviceTokenIds: number[]): Promise<void> {
+  async sendTest(id: number, deviceTokenIds: string[]): Promise<void> {
     const message = await this.findOne(id);
 
     if (deviceTokenIds.length === 0) {
@@ -209,6 +209,12 @@ export class PushMessageService {
   }
 
   private async getTargetDeviceTokens(target: PushTarget): Promise<DeviceToken[]> {
+    // Prefer test tokens from environment for easier manual testing
+    const testTokens = this.getTestDeviceTokensFromEnv(target);
+    if (testTokens) {
+      return testTokens;
+    }
+
     const where: any = { isActive: true };
 
     if (target === PushTarget.ANDROID) {
@@ -345,6 +351,68 @@ export class PushMessageService {
         console.error(`Error processing scheduled message ${message.id}:`, error);
       }
     }
+  }
+
+  private getTestDeviceTokensFromEnv(target: PushTarget): DeviceToken[] | null {
+    const raw =
+      process.env.TEST_DEVICE_TOKENS ||
+      process.env.test_device_tokens ||
+      process.env.Test_Device_Tokens;
+
+    if (!raw) return null;
+
+    const entries = raw
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    if (entries.length === 0) return null;
+
+    const parsed = entries
+      .map((entry) => {
+        const [maybePlatform, ...rest] = entry.split(':').map((v) => v.trim());
+        const token =
+          rest.length > 0 && maybePlatform ? rest.join(':') : entry;
+
+        // Determine platform:
+        // - explicit prefix "android:" or "ios:"
+        // - otherwise fall back to the current target
+        // - if target is ALL, default to ANDROID
+        let platform: Platform;
+        if (maybePlatform?.toLowerCase() === Platform.ANDROID) {
+          platform = Platform.ANDROID;
+        } else if (maybePlatform?.toLowerCase() === Platform.IOS) {
+          platform = Platform.IOS;
+        } else if (target === PushTarget.IOS) {
+          platform = Platform.IOS;
+        } else {
+          platform = Platform.ANDROID;
+        }
+
+        return {
+          id: '00000000-0000-0000-0000-000000000000',
+          userId: null,
+          fcmToken: token,
+          platform,
+          appVersion: null,
+          isActive: true,
+          lastSeenAt: null,
+          createdAt: new Date(0),
+          updatedAt: new Date(0),
+        } as DeviceToken;
+      })
+      // If target is specific, keep only matching platform
+      .filter((dt) => {
+        const targetPlatform =
+          target === PushTarget.ANDROID
+            ? Platform.ANDROID
+            : target === PushTarget.IOS
+            ? Platform.IOS
+            : null;
+        return !targetPlatform || dt.platform === targetPlatform;
+      });
+
+    return parsed.length > 0 ? parsed : null;
   }
 }
 

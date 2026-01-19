@@ -2,6 +2,8 @@ import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
+import { ResponseTransformInterceptor } from "./common/interceptors/response-transform.interceptor";
+import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +27,12 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     })
   );
+  
+  // Global response transformation (success responses)
+  app.useGlobalInterceptors(new ResponseTransformInterceptor());
+  
+  // Global exception filter (error responses)
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   // API prefix
   app.setGlobalPrefix("api");
@@ -38,6 +46,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  wrapSwaggerResponses(document);
   SwaggerModule.setup("api", app, document);
 
   const port = process.env.PORT || 3001;
@@ -48,3 +57,90 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+function wrapSwaggerResponses(document: any) {
+  if (!document?.paths) {
+    return;
+  }
+
+  const isWrappedSchema = (schema: any) => {
+    const properties = schema?.properties;
+    return (
+      properties &&
+      properties.success &&
+      properties.message &&
+      properties.data
+    );
+  };
+
+  const buildSuccessSchema = (dataSchema: any) => ({
+    type: "object",
+    properties: {
+      success: { type: "boolean", example: true },
+      message: { type: "string", example: "Request Success" },
+      data: dataSchema || { type: "object" },
+    },
+    required: ["success", "message", "data"],
+  });
+
+  const buildErrorSchema = () => ({
+    type: "object",
+    properties: {
+      success: { type: "boolean", example: false },
+      message: { type: "string", example: "Request Failed" },
+      data: { type: "null", example: null },
+      error: { type: "string" },
+    },
+    required: ["success", "message", "data"],
+  });
+
+  const wrapExample = (example: any, isSuccess: boolean) => {
+    if (
+      example &&
+      typeof example === "object" &&
+      "success" in example &&
+      "message" in example &&
+      "data" in example
+    ) {
+      return example;
+    }
+    return isSuccess
+      ? { success: true, message: "Request Success", data: example }
+      : {
+          success: false,
+          message: "Request Failed",
+          data: null,
+          error: example,
+        };
+  };
+
+  Object.values(document.paths).forEach((pathItem: any) => {
+    Object.values(pathItem).forEach((operation: any) => {
+      const responses = operation?.responses;
+      if (!responses) {
+        return;
+      }
+
+      Object.entries(responses).forEach(([statusCode, response]: any) => {
+        const content = response?.content?.["application/json"];
+        if (!content?.schema) {
+          return;
+        }
+
+        const isSuccess =
+          typeof statusCode === "string" && statusCode.startsWith("2");
+        const originalSchema = content.schema;
+
+        if (!isWrappedSchema(originalSchema)) {
+          content.schema = isSuccess
+            ? buildSuccessSchema(originalSchema)
+            : buildErrorSchema();
+        }
+
+        if (content.example) {
+          content.example = wrapExample(content.example, isSuccess);
+        }
+      });
+    });
+  });
+}

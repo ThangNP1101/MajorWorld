@@ -3,6 +3,7 @@ node_modules/
 .pnp
 .pnp.js
 .pnp.*
+.pnpm-store/
 .yarn/
 .yarn/cache
 .yarn/unplugged

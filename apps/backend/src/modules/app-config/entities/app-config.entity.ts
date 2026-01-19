@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
@@ -10,8 +10,12 @@ import { ApiProperty } from "@nestjs/swagger";
 @Entity("app_configs")
 export class AppConfig {
   @ApiProperty()
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: "varchar", length: 50, default: "default" })
+  key: string;
+
+  @ApiProperty()
+  @Column({ default: 1 })
+  version: number;
 
   @ApiProperty({ description: "Tab menu background color", example: "#9f7575" })
   @Column({ name: "tap_menu_bg", length: 7, default: "#FFFFFF" })

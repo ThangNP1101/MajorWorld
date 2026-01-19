@@ -16,8 +16,8 @@ export enum Platform {
 @Entity('device_tokens')
 export class DeviceToken {
   @ApiProperty()
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ApiProperty({ description: 'User ID (nullable if not logged in)' })
   @Column({ name: 'user_id', nullable: true })

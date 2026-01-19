@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
+import { APP_GUARD } from '@nestjs/core';
 import { DatabaseConfig } from './database/database.config';
 import { AppConfigModule } from './modules/app-config/app-config.module';
 import { BottomMenuModule } from './modules/bottom-menu/bottom-menu.module';
@@ -12,6 +13,10 @@ import { DeviceTokenModule } from './modules/device-token/device-token.module';
 import { PushStatisticsModule } from './modules/push-statistics/push-statistics.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { MobileApiModule } from './modules/mobile-api/mobile-api.module';
+import { CacheModule } from './common/cache/cache.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { ConfigVersionModule } from './modules/config-version/config-version.module';
 
 @Module({
   imports: [
@@ -35,6 +40,9 @@ import { MobileApiModule } from './modules/mobile-api/mobile-api.module';
     }),
 
     // Feature Modules
+    AuthModule,
+    CacheModule,
+    ConfigVersionModule,
     AppConfigModule,
     BottomMenuModule,
     SplashImageModule,
@@ -44,6 +52,12 @@ import { MobileApiModule } from './modules/mobile-api/mobile-api.module';
     PushStatisticsModule,
     UploadModule,
     MobileApiModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
 })
 export class AppModule {}
