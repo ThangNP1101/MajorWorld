@@ -19,6 +19,7 @@ import {
   ApiResponse,
   ApiConsumes,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { PushMessageService } from './push-message.service';
 import { PushMessage } from './entities/push-message.entity';
@@ -29,6 +30,7 @@ import { DeviceStatsDto } from './dto/device-stats.dto';
 import { UploadService } from '../upload/upload.service';
 
 @ApiTags('Admin - Push Messages')
+@ApiBearerAuth()
 @Controller('admin/push-messages')
 export class PushMessageController {
   constructor(

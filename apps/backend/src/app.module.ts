@@ -19,6 +19,7 @@ import { CacheModule } from './common/cache/cache.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { ConfigVersionModule } from './modules/config-version/config-version.module';
+import { DeepLinkModule } from './modules/deep-link/deep-link.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { ConfigVersionModule } from './modules/config-version/config-version.mod
     PushStatisticsModule,
     UploadModule,
     MobileApiModule,
+    DeepLinkModule,
   ],
   providers: [
     {

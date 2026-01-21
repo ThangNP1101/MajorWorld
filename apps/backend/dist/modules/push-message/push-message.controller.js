@@ -214,6 +214,7 @@ __decorate([
 ], PushMessageController.prototype, "uploadImage", null);
 exports.PushMessageController = PushMessageController = __decorate([
     (0, swagger_1.ApiTags)('Admin - Push Messages'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('admin/push-messages'),
     __metadata("design:paramtypes", [push_message_service_1.PushMessageService,
         upload_service_1.UploadService])

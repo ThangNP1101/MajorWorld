@@ -7,7 +7,7 @@ import {
   Param,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PushStatisticsService } from './push-statistics.service';
 import { TrackEventDto } from './dto/track-event.dto';
 import { GetStatsQueryDto, PaginationDto } from './dto/get-stats-query.dto';
@@ -16,6 +16,7 @@ import { EventType } from './entities/push-statistics.entity';
 import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('Push Statistics')
+@ApiBearerAuth()
 @Controller('push-statistics')
 export class PushStatisticsController {
   constructor(private readonly pushStatisticsService: PushStatisticsService) {}

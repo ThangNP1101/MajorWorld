@@ -28,6 +28,7 @@ const cache_module_1 = require("./common/cache/cache.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const jwt_auth_guard_1 = require("./modules/auth/guards/jwt-auth.guard");
 const config_version_module_1 = require("./modules/config-version/config-version.module");
+const deep_link_module_1 = require("./modules/deep-link/deep-link.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -61,6 +62,7 @@ exports.AppModule = AppModule = __decorate([
             push_statistics_module_1.PushStatisticsModule,
             upload_module_1.UploadModule,
             mobile_api_module_1.MobileApiModule,
+            deep_link_module_1.DeepLinkModule,
         ],
         providers: [
             {

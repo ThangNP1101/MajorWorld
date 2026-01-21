@@ -110,6 +110,7 @@ __decorate([
 ], PushStatisticsController.prototype, "getMessageStats", null);
 exports.PushStatisticsController = PushStatisticsController = __decorate([
     (0, swagger_1.ApiTags)('Push Statistics'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('push-statistics'),
     __metadata("design:paramtypes", [push_statistics_service_1.PushStatisticsService])
 ], PushStatisticsController);
