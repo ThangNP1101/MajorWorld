@@ -17,6 +17,8 @@ coverage/
 .jest/
 
 # Production / Build outputs
+dist/
+!apps/backend/dist/
 build/
 .next/
 out/
@@ -30,7 +32,6 @@ apps/admin/.vercel
 apps/admin/.swc/
 
 # NestJS / Backend
-apps/backend/dist/
 apps/backend/*.tsbuildinfo
 
 # React Native / Mobile

@@ -10,16 +10,38 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: [
-      "http://localhost:3000", // Admin panel
-      "http://localhost:3001", // Backend
-      "http://localhost:5173", // Development server
-      "capacitor://localhost", // Mobile app
-      "http://localhost", // Mobile app
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "http://localhost:3000", // Admin panel
+        "http://localhost:3001", // Backend
+        "http://localhost:5173", // Development server
+        "capacitor://localhost", // Mobile app
+        "http://localhost", // Mobile app
+      ];
+      
+      // Allow Cloudflare tunnel domains
+      const isCloudflareOrigin = origin?.includes('.trycloudflare.com');
+      
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin || allowedOrigins.includes(origin) || isCloudflareOrigin) {
+        callback(null, true);
+      } else {
+        // Allow all origins for development (remove in production)
+        callback(null, true);
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Accept",
+      "X-Requested-With",
+      "Origin",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Authorization"],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   // Global validation pipe

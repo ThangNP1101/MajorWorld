@@ -9,16 +9,34 @@ const http_exception_filter_1 = require("./common/filters/http-exception.filter"
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.enableCors({
-        origin: [
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "http://localhost:5173",
-            "capacitor://localhost",
-            "http://localhost",
+        origin: (origin, callback) => {
+            const allowedOrigins = [
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://localhost:5173",
+                "capacitor://localhost",
+                "http://localhost",
+            ];
+            const isCloudflareOrigin = origin?.includes('.trycloudflare.com');
+            if (!origin || allowedOrigins.includes(origin) || isCloudflareOrigin) {
+                callback(null, true);
+            }
+            else {
+                callback(null, true);
+            }
+        },
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization",
+            "Accept",
+            "X-Requested-With",
+            "Origin",
         ],
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
+        exposedHeaders: ["Authorization"],
         credentials: true,
+        preflightContinue: false,
+        optionsSuccessStatus: 204,
     });
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
