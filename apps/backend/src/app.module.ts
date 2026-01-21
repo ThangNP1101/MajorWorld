@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { DatabaseConfig } from './database/database.config';
 import { AppConfigModule } from './modules/app-config/app-config.module';
@@ -10,6 +11,7 @@ import { SplashImageModule } from './modules/splash-image/splash-image.module';
 import { AppFeaturesModule } from './modules/app-features/app-features.module';
 import { PushMessageModule } from './modules/push-message/push-message.module';
 import { DeviceTokenModule } from './modules/device-token/device-token.module';
+import { TestDeviceTokenModule } from './modules/test-device-token/test-device-token.module';
 import { PushStatisticsModule } from './modules/push-statistics/push-statistics.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { MobileApiModule } from './modules/mobile-api/mobile-api.module';
@@ -39,6 +41,9 @@ import { ConfigVersionModule } from './modules/config-version/config-version.mod
       },
     }),
 
+    // Scheduler for cron jobs
+    ScheduleModule.forRoot(),
+
     // Feature Modules
     AuthModule,
     CacheModule,
@@ -49,6 +54,7 @@ import { ConfigVersionModule } from './modules/config-version/config-version.mod
     AppFeaturesModule,
     PushMessageModule,
     DeviceTokenModule,
+    TestDeviceTokenModule,
     PushStatisticsModule,
     UploadModule,
     MobileApiModule,

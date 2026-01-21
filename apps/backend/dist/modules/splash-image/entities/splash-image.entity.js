@@ -26,7 +26,8 @@ __decorate([
         example: '9:16',
         enum: ['9:16', '9:19.5', '9:20', '9:18', '9:21', '9:19'],
     }),
-    (0, typeorm_1.Column)({ name: 'aspect_ratio', length: 10 }),
+    (0, typeorm_1.Index)('IDX_splash_images_aspect_ratio'),
+    (0, typeorm_1.Column)({ name: 'aspect_ratio', length: 10, unique: true }),
     __metadata("design:type", String)
 ], SplashImage.prototype, "aspectRatio", void 0);
 __decorate([

@@ -29,7 +29,7 @@ exports.CacheModule = CacheModule = __decorate([
             },
             cache_service_1.CacheService,
         ],
-        exports: [cache_service_1.CacheService],
+        exports: [cache_service_1.CacheService, cache_tokens_1.REDIS_CLIENT],
     })
 ], CacheModule);
 //# sourceMappingURL=cache.module.js.map

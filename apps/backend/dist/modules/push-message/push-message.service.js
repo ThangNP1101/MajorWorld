@@ -18,11 +18,13 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const push_message_entity_1 = require("./entities/push-message.entity");
 const device_token_entity_1 = require("../device-token/entities/device-token.entity");
+const test_device_token_entity_1 = require("../test-device-token/entities/test-device-token.entity");
 const admin = require("firebase-admin");
 let PushMessageService = class PushMessageService {
-    constructor(pushMessageRepository, deviceTokenRepository) {
+    constructor(pushMessageRepository, deviceTokenRepository, testDeviceTokenRepository) {
         this.pushMessageRepository = pushMessageRepository;
         this.deviceTokenRepository = deviceTokenRepository;
+        this.testDeviceTokenRepository = testDeviceTokenRepository;
         if (!admin.apps.length) {
             try {
                 admin.initializeApp({
@@ -161,7 +163,7 @@ let PushMessageService = class PushMessageService {
         if (deviceTokenIds.length === 0) {
             throw new common_1.BadRequestException('At least one test device must be selected');
         }
-        const deviceTokens = await this.deviceTokenRepository.find({
+        const deviceTokens = await this.testDeviceTokenRepository.find({
             where: { id: (0, typeorm_2.In)(deviceTokenIds), isActive: true },
         });
         if (deviceTokens.length === 0) {
@@ -352,7 +354,9 @@ exports.PushMessageService = PushMessageService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(push_message_entity_1.PushMessage)),
     __param(1, (0, typeorm_1.InjectRepository)(device_token_entity_1.DeviceToken)),
+    __param(2, (0, typeorm_1.InjectRepository)(test_device_token_entity_1.TestDeviceToken)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], PushMessageService);
 //# sourceMappingURL=push-message.service.js.map

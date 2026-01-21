@@ -19,7 +19,7 @@ import { JwtRefreshAuthGuard } from './guards/jwt-refresh-auth.guard';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET', 'majorworld-secret-key-change-in-production'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN', '7d'),
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN', '5m'),
         },
       }),
       inject: [ConfigService],

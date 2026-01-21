@@ -5,6 +5,7 @@ import { PushMessage, PushStatus, PushTarget, SendType } from './entities/push-m
 import { CreatePushMessageDto } from './dto/create-push-message.dto';
 import { UpdatePushMessageDto } from './dto/update-push-message.dto';
 import { DeviceToken, Platform } from '../device-token/entities/device-token.entity';
+import { TestDeviceToken } from '../test-device-token/entities/test-device-token.entity';
 import { DeviceStatsDto } from './dto/device-stats.dto';
 import * as admin from 'firebase-admin';
 
@@ -15,6 +16,8 @@ export class PushMessageService {
     private pushMessageRepository: Repository<PushMessage>,
     @InjectRepository(DeviceToken)
     private deviceTokenRepository: Repository<DeviceToken>,
+    @InjectRepository(TestDeviceToken)
+    private testDeviceTokenRepository: Repository<TestDeviceToken>,
   ) {
     // Initialize Firebase Admin if not already initialized
     if (!admin.apps.length) {
@@ -196,7 +199,7 @@ export class PushMessageService {
     }
 
     // Get test device tokens
-    const deviceTokens = await this.deviceTokenRepository.find({
+    const deviceTokens = await this.testDeviceTokenRepository.find({
       where: { id: In(deviceTokenIds), isActive: true },
     });
 
@@ -229,7 +232,7 @@ export class PushMessageService {
 
   private async sendPushNotifications(
     message: PushMessage,
-    deviceTokens: DeviceToken[],
+    deviceTokens: Array<{ fcmToken: string; platform: Platform }>,
   ): Promise<{ successCount: number; failureCount: number }> {
     if (!admin.apps.length) {
       throw new BadRequestException('Firebase Admin is not initialized');

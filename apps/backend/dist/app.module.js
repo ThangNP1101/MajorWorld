@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const bull_1 = require("@nestjs/bull");
+const schedule_1 = require("@nestjs/schedule");
 const core_1 = require("@nestjs/core");
 const database_config_1 = require("./database/database.config");
 const app_config_module_1 = require("./modules/app-config/app-config.module");
@@ -19,6 +20,7 @@ const splash_image_module_1 = require("./modules/splash-image/splash-image.modul
 const app_features_module_1 = require("./modules/app-features/app-features.module");
 const push_message_module_1 = require("./modules/push-message/push-message.module");
 const device_token_module_1 = require("./modules/device-token/device-token.module");
+const test_device_token_module_1 = require("./modules/test-device-token/test-device-token.module");
 const push_statistics_module_1 = require("./modules/push-statistics/push-statistics.module");
 const upload_module_1 = require("./modules/upload/upload.module");
 const mobile_api_module_1 = require("./modules/mobile-api/mobile-api.module");
@@ -45,6 +47,7 @@ exports.AppModule = AppModule = __decorate([
                     port: parseInt(process.env.REDIS_PORT) || 6379,
                 },
             }),
+            schedule_1.ScheduleModule.forRoot(),
             auth_module_1.AuthModule,
             cache_module_1.CacheModule,
             config_version_module_1.ConfigVersionModule,
@@ -54,6 +57,7 @@ exports.AppModule = AppModule = __decorate([
             app_features_module_1.AppFeaturesModule,
             push_message_module_1.PushMessageModule,
             device_token_module_1.DeviceTokenModule,
+            test_device_token_module_1.TestDeviceTokenModule,
             push_statistics_module_1.PushStatisticsModule,
             upload_module_1.UploadModule,
             mobile_api_module_1.MobileApiModule,

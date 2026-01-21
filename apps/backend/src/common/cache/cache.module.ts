@@ -17,6 +17,6 @@ import { REDIS_CLIENT } from "./cache.tokens";
     },
     CacheService,
   ],
-  exports: [CacheService],
+  exports: [CacheService, REDIS_CLIENT],
 })
 export class CacheModule {}

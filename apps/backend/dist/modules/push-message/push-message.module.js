@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const push_message_entity_1 = require("./entities/push-message.entity");
 const device_token_entity_1 = require("../device-token/entities/device-token.entity");
+const test_device_token_entity_1 = require("../test-device-token/entities/test-device-token.entity");
 const push_message_service_1 = require("./push-message.service");
 const push_message_controller_1 = require("./push-message.controller");
 const upload_module_1 = require("../upload/upload.module");
@@ -20,7 +21,7 @@ exports.PushMessageModule = PushMessageModule;
 exports.PushMessageModule = PushMessageModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([push_message_entity_1.PushMessage, device_token_entity_1.DeviceToken]),
+            typeorm_1.TypeOrmModule.forFeature([push_message_entity_1.PushMessage, device_token_entity_1.DeviceToken, test_device_token_entity_1.TestDeviceToken]),
             upload_module_1.UploadModule,
         ],
         controllers: [push_message_controller_1.PushMessageController],

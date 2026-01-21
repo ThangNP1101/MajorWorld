@@ -11,13 +11,20 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const splash_image_entity_1 = require("./entities/splash-image.entity");
 const splash_image_service_1 = require("./splash-image.service");
+const splash_image_controller_1 = require("./splash-image.controller");
 const upload_module_1 = require("../upload/upload.module");
+const config_version_module_1 = require("../config-version/config-version.module");
 let SplashImageModule = class SplashImageModule {
 };
 exports.SplashImageModule = SplashImageModule;
 exports.SplashImageModule = SplashImageModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([splash_image_entity_1.SplashImage]), upload_module_1.UploadModule],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([splash_image_entity_1.SplashImage]),
+            upload_module_1.UploadModule,
+            config_version_module_1.ConfigVersionModule,
+        ],
+        controllers: [splash_image_controller_1.SplashImageController],
         providers: [splash_image_service_1.SplashImageService],
         exports: [splash_image_service_1.SplashImageService],
     })

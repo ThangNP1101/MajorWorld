@@ -13,9 +13,12 @@ async function bootstrap() {
     origin: [
       "http://localhost:3000", // Admin panel
       "http://localhost:3001", // Backend
+      "http://localhost:5173", // Development server
       "capacitor://localhost", // Mobile app
       "http://localhost", // Mobile app
     ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   });
 

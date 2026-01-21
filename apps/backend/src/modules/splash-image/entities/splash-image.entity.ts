@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -18,7 +19,8 @@ export class SplashImage {
     example: '9:16',
     enum: ['9:16', '9:19.5', '9:20', '9:18', '9:21', '9:19'],
   })
-  @Column({ name: 'aspect_ratio', length: 10 })
+  @Index('IDX_splash_images_aspect_ratio')
+  @Column({ name: 'aspect_ratio', length: 10, unique: true })
   aspectRatio: string;
 
   @ApiProperty({
