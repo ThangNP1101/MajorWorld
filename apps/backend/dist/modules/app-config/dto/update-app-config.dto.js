@@ -42,4 +42,22 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], UpdateAppConfigDto.prototype, "titleBarBg", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '#FFFFFF', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^#[0-9A-Fa-f]{6}$/, {
+        message: 'tapMenuTextColor must be a valid hex color code',
+    }),
+    __metadata("design:type", String)
+], UpdateAppConfigDto.prototype, "tapMenuTextColor", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '#000000', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^#[0-9A-Fa-f]{6}$/, {
+        message: 'titleTextColor must be a valid hex color code',
+    }),
+    __metadata("design:type", String)
+], UpdateAppConfigDto.prototype, "titleTextColor", void 0);
 //# sourceMappingURL=update-app-config.dto.js.map

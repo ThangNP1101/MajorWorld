@@ -5,5 +5,7 @@ export declare class AppConfigHistory {
     tapMenuBg: string;
     statusBarBg: string;
     titleBarBg: string;
+    tapMenuTextColor: string;
+    titleTextColor: string;
     createdAt: Date;
 }

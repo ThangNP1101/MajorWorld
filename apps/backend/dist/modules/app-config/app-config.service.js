@@ -37,6 +37,8 @@ let AppConfigService = class AppConfigService {
                 tapMenuBg: "#9f7575",
                 statusBarBg: "#000000",
                 titleBarBg: "#FFFFFF",
+                tapMenuTextColor: "#FFFFFF",
+                titleTextColor: "#000000",
             });
             await this.appConfigRepository.save(config);
         }
@@ -56,6 +58,8 @@ let AppConfigService = class AppConfigService {
                     tapMenuBg: "#9f7575",
                     statusBarBg: "#000000",
                     titleBarBg: "#FFFFFF",
+                    tapMenuTextColor: "#FFFFFF",
+                    titleTextColor: "#000000",
                 });
             }
             else {
@@ -65,6 +69,8 @@ let AppConfigService = class AppConfigService {
                     tapMenuBg: config.tapMenuBg,
                     statusBarBg: config.statusBarBg,
                     titleBarBg: config.titleBarBg,
+                    tapMenuTextColor: config.tapMenuTextColor,
+                    titleTextColor: config.titleTextColor,
                 });
                 config.version += 1;
             }
@@ -74,6 +80,10 @@ let AppConfigService = class AppConfigService {
                 config.statusBarBg = updateDto.statusBarBg;
             if (updateDto.titleBarBg)
                 config.titleBarBg = updateDto.titleBarBg;
+            if (updateDto.tapMenuTextColor)
+                config.tapMenuTextColor = updateDto.tapMenuTextColor;
+            if (updateDto.titleTextColor)
+                config.titleTextColor = updateDto.titleTextColor;
             const saved = await configRepo.save(config);
             await this.configVersionService.incrementVersion(config_version_entity_1.ModuleName.APP_CONFIG);
             return saved;
@@ -90,6 +100,8 @@ let AppConfigService = class AppConfigService {
                     tapMenuBg: "#9f7575",
                     statusBarBg: "#000000",
                     titleBarBg: "#FFFFFF",
+                    tapMenuTextColor: "#FFFFFF",
+                    titleTextColor: "#000000",
                 });
             const target = await historyRepo.findOne({
                 where: { configKey: "default", version: toVersion },
@@ -103,11 +115,15 @@ let AppConfigService = class AppConfigService {
                 tapMenuBg: config.tapMenuBg,
                 statusBarBg: config.statusBarBg,
                 titleBarBg: config.titleBarBg,
+                tapMenuTextColor: config.tapMenuTextColor,
+                titleTextColor: config.titleTextColor,
             });
             Object.assign(config, {
                 tapMenuBg: target.tapMenuBg,
                 statusBarBg: target.statusBarBg,
                 titleBarBg: target.titleBarBg,
+                tapMenuTextColor: target.tapMenuTextColor,
+                titleTextColor: target.titleTextColor,
                 version: config.version + 1,
             });
             const saved = await configRepo.save(config);

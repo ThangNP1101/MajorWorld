@@ -2,6 +2,8 @@ declare class ThemeDto {
     tapMenuBg: string;
     statusBarBg: string;
     titleBarBg: string;
+    tapMenuTextColor: string;
+    titleTextColor: string;
 }
 declare class MenuItemDto {
     id: number;

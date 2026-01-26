@@ -32,6 +32,14 @@ export class AppConfigHistory {
   @Column({ name: "title_bar_bg", length: 7 })
   titleBarBg: string;
 
+  @ApiProperty({ description: "Tab menu text color" })
+  @Column({ name: "tap_menu_text_color", length: 7 })
+  tapMenuTextColor: string;
+
+  @ApiProperty({ description: "Title text color" })
+  @Column({ name: "title_text_color", length: 7 })
+  titleTextColor: string;
+
   @ApiProperty()
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;

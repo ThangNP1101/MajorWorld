@@ -25,5 +25,21 @@ export class UpdateAppConfigDto {
     message: 'titleBarBg must be a valid hex color code',
   })
   titleBarBg?: string;
+
+  @ApiProperty({ example: '#FFFFFF', required: false })
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, {
+    message: 'tapMenuTextColor must be a valid hex color code',
+  })
+  tapMenuTextColor?: string;
+
+  @ApiProperty({ example: '#000000', required: false })
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, {
+    message: 'titleTextColor must be a valid hex color code',
+  })
+  titleTextColor?: string;
 }
 

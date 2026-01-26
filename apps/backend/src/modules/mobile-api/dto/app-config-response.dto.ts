@@ -9,6 +9,12 @@ class ThemeDto {
 
   @ApiProperty()
   titleBarBg: string;
+
+  @ApiProperty()
+  tapMenuTextColor: string;
+
+  @ApiProperty()
+  titleTextColor: string;
 }
 
 class MenuItemDto {

@@ -25,6 +25,14 @@ __decorate([
     (0, swagger_1.ApiProperty)(),
     __metadata("design:type", String)
 ], ThemeDto.prototype, "titleBarBg", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], ThemeDto.prototype, "tapMenuTextColor", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], ThemeDto.prototype, "titleTextColor", void 0);
 class MenuItemDto {
 }
 __decorate([

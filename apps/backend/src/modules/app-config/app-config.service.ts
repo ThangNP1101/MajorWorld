@@ -30,6 +30,8 @@ export class AppConfigService {
         tapMenuBg: "#9f7575",
         statusBarBg: "#000000",
         titleBarBg: "#FFFFFF",
+        tapMenuTextColor: "#FFFFFF",
+        titleTextColor: "#000000",
       });
       await this.appConfigRepository.save(config);
     }
@@ -53,6 +55,8 @@ export class AppConfigService {
           tapMenuBg: "#9f7575",
           statusBarBg: "#000000",
           titleBarBg: "#FFFFFF",
+          tapMenuTextColor: "#FFFFFF",
+          titleTextColor: "#000000",
         });
       } else {
         // Save current state to history before updating
@@ -62,6 +66,8 @@ export class AppConfigService {
           tapMenuBg: config.tapMenuBg,
           statusBarBg: config.statusBarBg,
           titleBarBg: config.titleBarBg,
+          tapMenuTextColor: config.tapMenuTextColor,
+          titleTextColor: config.titleTextColor,
         });
         config.version += 1;
       }
@@ -69,6 +75,10 @@ export class AppConfigService {
       if (updateDto.tapMenuBg) config.tapMenuBg = updateDto.tapMenuBg;
       if (updateDto.statusBarBg) config.statusBarBg = updateDto.statusBarBg;
       if (updateDto.titleBarBg) config.titleBarBg = updateDto.titleBarBg;
+      if (updateDto.tapMenuTextColor)
+        config.tapMenuTextColor = updateDto.tapMenuTextColor;
+      if (updateDto.titleTextColor)
+        config.titleTextColor = updateDto.titleTextColor;
 
       const saved = await configRepo.save(config);
 
@@ -91,6 +101,8 @@ export class AppConfigService {
           tapMenuBg: "#9f7575",
           statusBarBg: "#000000",
           titleBarBg: "#FFFFFF",
+          tapMenuTextColor: "#FFFFFF",
+          titleTextColor: "#000000",
         });
 
       const target = await historyRepo.findOne({
@@ -108,12 +120,16 @@ export class AppConfigService {
         tapMenuBg: config.tapMenuBg,
         statusBarBg: config.statusBarBg,
         titleBarBg: config.titleBarBg,
+        tapMenuTextColor: config.tapMenuTextColor,
+        titleTextColor: config.titleTextColor,
       });
 
       Object.assign(config, {
         tapMenuBg: target.tapMenuBg,
         statusBarBg: target.statusBarBg,
         titleBarBg: target.titleBarBg,
+        tapMenuTextColor: target.tapMenuTextColor,
+        titleTextColor: target.titleTextColor,
         version: config.version + 1,
       });
 

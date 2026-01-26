@@ -60,6 +60,8 @@ export class MobileApiService {
         tapMenuBg: appConfig.tapMenuBg,
         statusBarBg: appConfig.statusBarBg,
         titleBarBg: appConfig.titleBarBg,
+        tapMenuTextColor: appConfig.tapMenuTextColor,
+        titleTextColor: appConfig.titleTextColor,
       },
       menus: menus.map((menu) => ({
         id: menu.id,
@@ -112,6 +114,8 @@ export class MobileApiService {
         tapMenuBg: "#9f7575",
         statusBarBg: "#000000",
         titleBarBg: "#FFFFFF",
+        tapMenuTextColor: "#FFFFFF",
+        titleTextColor: "#000000",
         version: 1,
       });
       await this.appConfigRepository.save(appConfig);

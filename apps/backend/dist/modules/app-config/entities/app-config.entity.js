@@ -47,6 +47,22 @@ __decorate([
     __metadata("design:type", String)
 ], AppConfig.prototype, "titleBarBg", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: "Tab menu text color",
+        example: "#FFFFFF",
+    }),
+    (0, typeorm_1.Column)({ name: "tap_menu_text_color", length: 7, default: "#FFFFFF" }),
+    __metadata("design:type", String)
+], AppConfig.prototype, "tapMenuTextColor", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: "Title text color",
+        example: "#000000",
+    }),
+    (0, typeorm_1.Column)({ name: "title_text_color", length: 7, default: "#000000" }),
+    __metadata("design:type", String)
+], AppConfig.prototype, "titleTextColor", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)(),
     (0, typeorm_1.CreateDateColumn)({ name: "created_at" }),
     __metadata("design:type", Date)
