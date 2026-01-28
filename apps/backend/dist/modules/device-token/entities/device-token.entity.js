@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeviceToken = exports.Platform = void 0;
 const typeorm_1 = require("typeorm");
 const swagger_1 = require("@nestjs/swagger");
+const topic_sync_status_enum_1 = require("../enums/topic-sync-status.enum");
 var Platform;
 (function (Platform) {
     Platform["ANDROID"] = "android";
@@ -54,6 +55,40 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'is_active', default: true }),
     __metadata("design:type", Boolean)
 ], DeviceToken.prototype, "isActive", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: topic_sync_status_enum_1.TopicSyncStatus }),
+    (0, typeorm_1.Column)({
+        name: 'topics_sync_status',
+        type: 'enum',
+        enum: topic_sync_status_enum_1.TopicSyncStatus,
+        default: topic_sync_status_enum_1.TopicSyncStatus.PENDING,
+    }),
+    __metadata("design:type", String)
+], DeviceToken.prototype, "topicsSyncStatus", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'List of synced topics' }),
+    (0, typeorm_1.Column)({
+        name: 'topics_synced_list',
+        type: 'jsonb',
+        default: () => "'[]'::jsonb",
+    }),
+    __metadata("design:type", Array)
+], DeviceToken.prototype, "topicsSyncedList", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last topic sync attempt time' }),
+    (0, typeorm_1.Column)({ name: 'topics_sync_attempted_at', type: 'timestamp', nullable: true }),
+    __metadata("design:type", Date)
+], DeviceToken.prototype, "topicsSyncAttemptedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Retry count for topic sync' }),
+    (0, typeorm_1.Column)({ name: 'topics_sync_retry_count', default: 0 }),
+    __metadata("design:type", Number)
+], DeviceToken.prototype, "topicsSyncRetryCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last topic sync error', nullable: true }),
+    (0, typeorm_1.Column)({ name: 'topics_sync_error', length: 500, nullable: true }),
+    __metadata("design:type", String)
+], DeviceToken.prototype, "topicsSyncError", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)(),
     (0, typeorm_1.Column)({ name: 'last_seen_at', type: 'timestamp', nullable: true }),

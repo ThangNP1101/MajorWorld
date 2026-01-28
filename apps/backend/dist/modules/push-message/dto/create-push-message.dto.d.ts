@@ -8,5 +8,6 @@ export declare class CreatePushMessageDto {
     landingUrl?: string;
     target: PushTarget;
     sendType: SendType;
+    scheduledJobId?: string;
     scheduledAt?: string;
 }

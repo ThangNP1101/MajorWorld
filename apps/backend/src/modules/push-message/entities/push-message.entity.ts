@@ -85,6 +85,10 @@ export class PushMessage {
   scheduledAt: Date;
 
   @ApiProperty()
+  @Column({ name: 'scheduled_job_id', length: 64, nullable: true })
+  scheduledJobId: string | null;
+
+  @ApiProperty()
   @Column({ name: 'sent_at', type: 'timestamp', nullable: true })
   sentAt: Date;
 

@@ -93,6 +93,16 @@ __decorate([
 ], CreatePushMessageDto.prototype, "sendType", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'Scheduled job ID',
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(64),
+    __metadata("design:type", String)
+], CreatePushMessageDto.prototype, "scheduledJobId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
         description: 'Scheduled date and time (ISO string)',
         required: false,
     }),

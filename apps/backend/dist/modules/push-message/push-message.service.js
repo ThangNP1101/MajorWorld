@@ -14,17 +14,21 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PushMessageService = void 0;
 const common_1 = require("@nestjs/common");
+const bull_1 = require("@nestjs/bull");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const push_message_entity_1 = require("./entities/push-message.entity");
 const device_token_entity_1 = require("../device-token/entities/device-token.entity");
 const test_device_token_entity_1 = require("../test-device-token/entities/test-device-token.entity");
+const push_message_queue_constants_1 = require("./push-message-queue.constants");
+const device_token_topics_constants_1 = require("../device-token/constants/device-token-topics.constants");
 const admin = require("firebase-admin");
 let PushMessageService = class PushMessageService {
-    constructor(pushMessageRepository, deviceTokenRepository, testDeviceTokenRepository) {
+    constructor(pushMessageRepository, deviceTokenRepository, testDeviceTokenRepository, scheduledQueue) {
         this.pushMessageRepository = pushMessageRepository;
         this.deviceTokenRepository = deviceTokenRepository;
         this.testDeviceTokenRepository = testDeviceTokenRepository;
+        this.scheduledQueue = scheduledQueue;
         if (!admin.apps.length) {
             try {
                 admin.initializeApp({
@@ -81,10 +85,22 @@ let PushMessageService = class PushMessageService {
                 ? push_message_entity_1.PushStatus.SCHEDULED
                 : push_message_entity_1.PushStatus.DRAFT,
         });
-        return this.pushMessageRepository.save(message);
+        const savedMessage = await this.pushMessageRepository.save(message);
+        if (savedMessage.sendType === push_message_entity_1.SendType.SCHEDULED && savedMessage.scheduledAt) {
+            const scheduledJobId = await this.executeSchedulePushMessageJob({
+                messageId: savedMessage.id,
+                scheduledAt: savedMessage.scheduledAt,
+            });
+            savedMessage.scheduledJobId = scheduledJobId;
+            return this.pushMessageRepository.save(savedMessage);
+        }
+        return savedMessage;
     }
     async update(id, updateDto) {
         const message = await this.findOne(id);
+        const previousSendType = message.sendType;
+        const previousScheduledAt = message.scheduledAt;
+        const previousScheduledJobId = message.scheduledJobId;
         if (message.status === push_message_entity_1.PushStatus.SENT) {
             throw new common_1.BadRequestException('Cannot update a message that has already been sent');
         }
@@ -107,13 +123,20 @@ let PushMessageService = class PushMessageService {
                 ? push_message_entity_1.PushStatus.SCHEDULED
                 : message.status,
         });
-        return this.pushMessageRepository.save(message);
+        const updatedMessage = await this.pushMessageRepository.save(message);
+        return this.executeUpdateScheduledJob({
+            message: updatedMessage,
+            previousSendType,
+            previousScheduledAt,
+            previousScheduledJobId,
+        });
     }
     async remove(id) {
         const message = await this.findOne(id);
         if (message.status === push_message_entity_1.PushStatus.SENT || message.status === push_message_entity_1.PushStatus.SENDING) {
             throw new common_1.BadRequestException('Cannot delete a message that has been sent or is sending');
         }
+        await this.executeCancelScheduledJob({ jobId: message.scheduledJobId });
         await this.pushMessageRepository.remove(message);
     }
     async getDeviceStats() {
@@ -138,17 +161,22 @@ let PushMessageService = class PushMessageService {
         if (message.status === push_message_entity_1.PushStatus.SENDING) {
             throw new common_1.BadRequestException('Message is currently being sent');
         }
+        if (message.sendType === push_message_entity_1.SendType.SCHEDULED && message.scheduledJobId) {
+            await this.executeCancelScheduledJob({ jobId: message.scheduledJobId });
+            message.scheduledJobId = null;
+            await this.pushMessageRepository.save(message);
+        }
         message.status = push_message_entity_1.PushStatus.SENDING;
         await this.pushMessageRepository.save(message);
         try {
-            const deviceTokens = await this.getTargetDeviceTokens(message.target);
-            if (deviceTokens.length === 0) {
+            const targetCount = await this.countTargetDeviceTokens(message.target);
+            if (targetCount === 0) {
                 throw new common_1.BadRequestException('No active device tokens found for the selected target');
             }
-            const results = await this.sendPushNotifications(message, deviceTokens);
+            await this.sendPushNotificationsByTopic(message);
             message.status = push_message_entity_1.PushStatus.SENT;
             message.sentAt = new Date();
-            message.totalSent = results.successCount;
+            message.totalSent = targetCount;
             await this.pushMessageRepository.save(message);
             return message;
         }
@@ -169,13 +197,20 @@ let PushMessageService = class PushMessageService {
         if (deviceTokens.length === 0) {
             throw new common_1.BadRequestException('No active device tokens found for the selected devices');
         }
-        await this.sendPushNotifications(message, deviceTokens);
+        await this.sendTestPushNotifications(message, deviceTokens);
     }
-    async getTargetDeviceTokens(target) {
-        const testTokens = this.getTestDeviceTokensFromEnv(target);
-        if (testTokens) {
-            return testTokens;
-        }
+    async executeSendScheduledMessage(params) {
+        const message = await this.findOne(params.messageId);
+        const now = new Date();
+        if (message.sendType !== push_message_entity_1.SendType.SCHEDULED)
+            return;
+        if (!message.scheduledAt || message.scheduledAt > now)
+            return;
+        if (message.status === push_message_entity_1.PushStatus.SENT || message.status === push_message_entity_1.PushStatus.SENDING)
+            return;
+        await this.send(message.id);
+    }
+    async countTargetDeviceTokens(target) {
         const where = { isActive: true };
         if (target === push_message_entity_1.PushTarget.ANDROID) {
             where.platform = device_token_entity_1.Platform.ANDROID;
@@ -183,101 +218,134 @@ let PushMessageService = class PushMessageService {
         else if (target === push_message_entity_1.PushTarget.IOS) {
             where.platform = device_token_entity_1.Platform.IOS;
         }
-        return this.deviceTokenRepository.find({ where });
+        return this.deviceTokenRepository.count({ where });
     }
-    async sendPushNotifications(message, deviceTokens) {
+    async sendPushNotificationsByTopic(message) {
+        const messagingClient = this.getMessagingClient();
+        if (message.target === push_message_entity_1.PushTarget.ANDROID) {
+            if (!message.androidMessage) {
+                throw new common_1.BadRequestException('Android message is required for Android target');
+            }
+            const payload = this.buildAndroidTopicMessage({ message, topic: device_token_topics_constants_1.DEVICE_TOKEN_TOPICS.ANDROID });
+            await messagingClient.send(payload);
+            return;
+        }
+        if (message.target === push_message_entity_1.PushTarget.IOS) {
+            if (!message.iosMessage) {
+                throw new common_1.BadRequestException('iOS message is required for iOS target');
+            }
+            const payload = this.buildIosTopicMessage({ message, topic: device_token_topics_constants_1.DEVICE_TOKEN_TOPICS.IOS });
+            await messagingClient.send(payload);
+            return;
+        }
+        const tasks = [];
+        if (message.androidMessage && message.iosMessage) {
+            const payload = this.buildAllTopicMessage({ message, topic: device_token_topics_constants_1.DEVICE_TOKEN_TOPICS.ALL });
+            tasks.push(messagingClient.send(payload));
+            await Promise.all(tasks);
+            return;
+        }
+        if (message.androidMessage) {
+            const payload = this.buildAndroidTopicMessage({ message, topic: device_token_topics_constants_1.DEVICE_TOKEN_TOPICS.ANDROID });
+            tasks.push(messagingClient.send(payload));
+        }
+        if (message.iosMessage) {
+            const payload = this.buildIosTopicMessage({ message, topic: device_token_topics_constants_1.DEVICE_TOKEN_TOPICS.IOS });
+            tasks.push(messagingClient.send(payload));
+        }
+        if (tasks.length === 0) {
+            throw new common_1.BadRequestException('At least one message (Android or iOS) is required');
+        }
+        await Promise.all(tasks);
+    }
+    async sendTestPushNotifications(message, deviceTokens) {
+        const messagingClient = this.getMessagingClient();
+        const tasks = deviceTokens.map((token) => {
+            if (token.platform === device_token_entity_1.Platform.ANDROID) {
+                if (!message.androidMessage) {
+                    throw new common_1.BadRequestException('Android message is required for Android test tokens');
+                }
+                const payload = this.buildAndroidTokenMessage({ message, token: token.fcmToken });
+                return messagingClient.send(payload);
+            }
+            if (!message.iosMessage) {
+                throw new common_1.BadRequestException('iOS message is required for iOS test tokens');
+            }
+            const payload = this.buildIosTokenMessage({ message, token: token.fcmToken });
+            return messagingClient.send(payload);
+        });
+        await Promise.all(tasks);
+    }
+    buildMessageData(message) {
+        return {
+            landingUrl: message.landingUrl || '',
+            pushMessageId: message.id.toString(),
+        };
+    }
+    buildAndroidTopicMessage(params) {
+        const data = this.buildMessageData(params.message);
+        const androidConfig = this.buildAndroidConfig({ message: params.message });
+        return { topic: params.topic, data, android: androidConfig };
+    }
+    buildIosTopicMessage(params) {
+        const data = this.buildMessageData(params.message);
+        const apnsConfig = this.buildApnsConfig({ message: params.message });
+        return { topic: params.topic, data, apns: apnsConfig };
+    }
+    buildAllTopicMessage(params) {
+        const data = this.buildMessageData(params.message);
+        const androidConfig = this.buildAndroidConfig({ message: params.message });
+        const apnsConfig = this.buildApnsConfig({ message: params.message });
+        return { topic: params.topic, data, android: androidConfig, apns: apnsConfig };
+    }
+    buildAndroidTokenMessage(params) {
+        const data = this.buildMessageData(params.message);
+        const androidConfig = this.buildAndroidConfig({ message: params.message });
+        return { token: params.token, data, android: androidConfig };
+    }
+    buildIosTokenMessage(params) {
+        const data = this.buildMessageData(params.message);
+        const apnsConfig = this.buildApnsConfig({ message: params.message });
+        return { token: params.token, data, apns: apnsConfig };
+    }
+    buildAndroidConfig(params) {
+        const notification = {
+            title: params.message.title,
+            body: params.message.androidMessage || '',
+            ...(params.message.imageUrl && !params.message.androidBigtext && { imageUrl: params.message.imageUrl }),
+        };
+        const bigTextNotification = params.message.androidBigtext && params.message.androidBigtext.length > 0
+            ? {
+                body: params.message.androidBigtext,
+                style: 'bigtext',
+                ...(params.message.imageUrl && { imageUrl: params.message.imageUrl }),
+            }
+            : null;
+        return {
+            priority: 'high',
+            notification: bigTextNotification ? { ...notification, ...bigTextNotification } : notification,
+        };
+    }
+    buildApnsConfig(params) {
+        const alert = { title: params.message.title, body: params.message.iosMessage || '' };
+        return {
+            payload: {
+                aps: {
+                    alert,
+                    sound: 'default',
+                    ...(params.message.imageUrl && { mutableContent: true }),
+                },
+            },
+            ...(params.message.imageUrl && {
+                fcmOptions: { imageUrl: params.message.imageUrl },
+            }),
+        };
+    }
+    getMessagingClient() {
         if (!admin.apps.length) {
             throw new common_1.BadRequestException('Firebase Admin is not initialized');
         }
-        let successCount = 0;
-        let failureCount = 0;
-        const androidTokens = deviceTokens
-            .filter((dt) => dt.platform === device_token_entity_1.Platform.ANDROID)
-            .map((dt) => dt.fcmToken);
-        const iosTokens = deviceTokens
-            .filter((dt) => dt.platform === device_token_entity_1.Platform.IOS)
-            .map((dt) => dt.fcmToken);
-        if (androidTokens.length > 0 && message.androidMessage) {
-            const androidMessage = {
-                notification: {
-                    title: message.title,
-                    body: message.androidMessage,
-                },
-                data: {
-                    landingUrl: message.landingUrl || '',
-                    pushMessageId: message.id.toString(),
-                },
-                android: {
-                    priority: 'high',
-                    ...(message.androidBigtext && {
-                        notification: {
-                            body: message.androidBigtext,
-                            style: 'bigtext',
-                            ...(message.imageUrl && { imageUrl: message.imageUrl }),
-                        },
-                    }),
-                    ...(message.imageUrl && !message.androidBigtext && {
-                        notification: {
-                            imageUrl: message.imageUrl,
-                        },
-                    }),
-                },
-            };
-            try {
-                const response = await admin.messaging().sendEachForMulticast({
-                    tokens: androidTokens,
-                    ...androidMessage,
-                });
-                successCount += response.successCount;
-                failureCount += response.failureCount;
-            }
-            catch (error) {
-                console.error('Error sending Android push notifications:', error);
-                failureCount += androidTokens.length;
-            }
-        }
-        if (iosTokens.length > 0 && message.iosMessage) {
-            const iosMessage = {
-                notification: {
-                    title: message.title,
-                    body: message.iosMessage,
-                },
-                data: {
-                    landingUrl: message.landingUrl || '',
-                    pushMessageId: message.id.toString(),
-                },
-                apns: {
-                    payload: {
-                        aps: {
-                            alert: {
-                                title: message.title,
-                                body: message.iosMessage,
-                            },
-                            sound: 'default',
-                            ...(message.imageUrl && { mutableContent: true }),
-                        },
-                    },
-                    ...(message.imageUrl && {
-                        fcmOptions: {
-                            imageUrl: message.imageUrl,
-                        },
-                    }),
-                },
-            };
-            try {
-                const response = await admin.messaging().sendEachForMulticast({
-                    tokens: iosTokens,
-                    ...iosMessage,
-                });
-                successCount += response.successCount;
-                failureCount += response.failureCount;
-            }
-            catch (error) {
-                console.error('Error sending iOS push notifications:', error);
-                failureCount += iosTokens.length;
-            }
-        }
-        return { successCount, failureCount };
+        return admin.messaging();
     }
     async processScheduledMessages() {
         const now = new Date();
@@ -297,56 +365,51 @@ let PushMessageService = class PushMessageService {
             }
         }
     }
-    getTestDeviceTokensFromEnv(target) {
-        const raw = process.env.TEST_DEVICE_TOKENS ||
-            process.env.test_device_tokens ||
-            process.env.Test_Device_Tokens;
-        if (!raw)
-            return null;
-        const entries = raw
-            .split(',')
-            .map((value) => value.trim())
-            .filter(Boolean);
-        if (entries.length === 0)
-            return null;
-        const parsed = entries
-            .map((entry) => {
-            const [maybePlatform, ...rest] = entry.split(':').map((v) => v.trim());
-            const token = rest.length > 0 && maybePlatform ? rest.join(':') : entry;
-            let platform;
-            if (maybePlatform?.toLowerCase() === device_token_entity_1.Platform.ANDROID) {
-                platform = device_token_entity_1.Platform.ANDROID;
+    async executeUpdateScheduledJob(params) {
+        const shouldSchedule = params.message.sendType === push_message_entity_1.SendType.SCHEDULED && !!params.message.scheduledAt;
+        const isScheduleChanged = params.previousSendType !== params.message.sendType ||
+            this.isScheduledAtChanged({
+                previousScheduledAt: params.previousScheduledAt,
+                scheduledAt: params.message.scheduledAt,
+            });
+        if (!shouldSchedule) {
+            await this.executeCancelScheduledJob({ jobId: params.previousScheduledJobId });
+            if (params.message.scheduledJobId) {
+                params.message.scheduledJobId = null;
+                return this.pushMessageRepository.save(params.message);
             }
-            else if (maybePlatform?.toLowerCase() === device_token_entity_1.Platform.IOS) {
-                platform = device_token_entity_1.Platform.IOS;
-            }
-            else if (target === push_message_entity_1.PushTarget.IOS) {
-                platform = device_token_entity_1.Platform.IOS;
-            }
-            else {
-                platform = device_token_entity_1.Platform.ANDROID;
-            }
-            return {
-                id: '00000000-0000-0000-0000-000000000000',
-                userId: null,
-                fcmToken: token,
-                platform,
-                appVersion: null,
-                isActive: true,
-                lastSeenAt: null,
-                createdAt: new Date(0),
-                updatedAt: new Date(0),
-            };
-        })
-            .filter((dt) => {
-            const targetPlatform = target === push_message_entity_1.PushTarget.ANDROID
-                ? device_token_entity_1.Platform.ANDROID
-                : target === push_message_entity_1.PushTarget.IOS
-                    ? device_token_entity_1.Platform.IOS
-                    : null;
-            return !targetPlatform || dt.platform === targetPlatform;
+            return params.message;
+        }
+        if (!isScheduleChanged && params.message.scheduledJobId)
+            return params.message;
+        await this.executeCancelScheduledJob({ jobId: params.previousScheduledJobId });
+        const scheduledJobId = await this.executeSchedulePushMessageJob({
+            messageId: params.message.id,
+            scheduledAt: params.message.scheduledAt,
         });
-        return parsed.length > 0 ? parsed : null;
+        params.message.scheduledJobId = scheduledJobId;
+        return this.pushMessageRepository.save(params.message);
+    }
+    async executeSchedulePushMessageJob(params) {
+        const jobId = this.buildScheduledJobId(params.messageId);
+        const delayMs = Math.max(params.scheduledAt.getTime() - Date.now(), 0);
+        await this.scheduledQueue.add(push_message_queue_constants_1.PUSH_MESSAGE_QUEUE.JOB.SEND_SCHEDULED, { messageId: params.messageId }, { delay: delayMs, jobId });
+        return jobId;
+    }
+    async executeCancelScheduledJob(params) {
+        if (!params.jobId)
+            return;
+        await this.scheduledQueue.removeJobs(params.jobId);
+    }
+    buildScheduledJobId(messageId) {
+        return `push-scheduled-${messageId}`;
+    }
+    isScheduledAtChanged(params) {
+        if (!params.previousScheduledAt && !params.scheduledAt)
+            return false;
+        if (!params.previousScheduledAt || !params.scheduledAt)
+            return true;
+        return params.previousScheduledAt.getTime() !== params.scheduledAt.getTime();
     }
 };
 exports.PushMessageService = PushMessageService;
@@ -355,8 +418,9 @@ exports.PushMessageService = PushMessageService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(push_message_entity_1.PushMessage)),
     __param(1, (0, typeorm_1.InjectRepository)(device_token_entity_1.DeviceToken)),
     __param(2, (0, typeorm_1.InjectRepository)(test_device_token_entity_1.TestDeviceToken)),
+    __param(3, (0, bull_1.InjectQueue)(push_message_queue_constants_1.PUSH_MESSAGE_QUEUE.QUEUE_NAME)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository, Object])
 ], PushMessageService);
 //# sourceMappingURL=push-message.service.js.map

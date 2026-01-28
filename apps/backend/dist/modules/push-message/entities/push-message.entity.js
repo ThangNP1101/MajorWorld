@@ -103,6 +103,11 @@ __decorate([
 ], PushMessage.prototype, "scheduledAt", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)(),
+    (0, typeorm_1.Column)({ name: 'scheduled_job_id', length: 64, nullable: true }),
+    __metadata("design:type", String)
+], PushMessage.prototype, "scheduledJobId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
     (0, typeorm_1.Column)({ name: 'sent_at', type: 'timestamp', nullable: true }),
     __metadata("design:type", Date)
 ], PushMessage.prototype, "sentAt", void 0);

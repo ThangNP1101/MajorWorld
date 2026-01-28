@@ -78,6 +78,15 @@ export class CreatePushMessageDto {
   sendType: SendType;
 
   @ApiProperty({
+    description: 'Scheduled job ID',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  scheduledJobId?: string;
+
+  @ApiProperty({
     description: 'Scheduled date and time (ISO string)',
     required: false,
   })

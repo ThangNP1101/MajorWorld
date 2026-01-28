@@ -25,6 +25,7 @@ export declare class PushMessage {
     status: PushStatus;
     sendType: SendType;
     scheduledAt: Date;
+    scheduledJobId: string | null;
     sentAt: Date;
     totalSent: number;
     totalViews: number;
